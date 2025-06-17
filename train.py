@@ -15,10 +15,10 @@ def train_epoch(model, loader, optimizer, device, loss_fn):
 
     for inputs, targets in tqdm(loader):
         inputs = inputs.to(device)
-        targets = targets.float().to(device)
+        targets = targets.unsqueeze(-1).float().to(device)
 
         optimizer.zero_grad()
-        outputs = model(inputs).squeeze(1)
+        outputs = model(inputs)
 
         loss = loss_fn(outputs, targets)
         loss.backward()
@@ -26,8 +26,8 @@ def train_epoch(model, loader, optimizer, device, loss_fn):
 
         epoch_loss += loss.item()
         preds = (torch.sigmoid(outputs) > 0.5)
-        all_preds.extend(preds.cpu().numpy())
-        all_targets.extend(targets.cpu().numpy())
+        all_preds.extend(preds.cpu().numpy().reshape(-1))
+        all_targets.extend(targets.cpu().numpy().reshape(-1))
 
     precision, recall, f1 = compute_metrics(all_targets, all_preds)
 
@@ -43,16 +43,16 @@ def test(model, loader, device, loss_fn):
 
     for inputs, targets in loader:
         inputs = inputs.to(device)
-        targets = targets.float().to(device)
+        targets = targets.unsqueeze(-1).float().to(device)
 
         with torch.no_grad():
-            outputs = model(inputs).squeeze(1)
+            outputs = model(inputs)
             loss = loss_fn(outputs, targets)
 
         epoch_loss += loss.item()
         preds = (torch.sigmoid(outputs) > 0.5)
-        all_preds.extend(preds.cpu().numpy())
-        all_targets.extend(targets.cpu().numpy())
+        all_preds.extend(preds.cpu().numpy().reshape(-1))
+        all_targets.extend(targets.cpu().numpy().reshape(-1))
 
     precision, recall, f1 = compute_metrics(all_targets, all_preds)
 

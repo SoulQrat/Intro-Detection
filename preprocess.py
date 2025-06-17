@@ -43,6 +43,8 @@ def extract_frames_with_labels(video_folder: str, label_df):
         duration = int(total_frames / fps)
 
         for sec in tqdm(range(duration), total=duration):
+            if sec > np.random.randint(3, 10):
+                break
             cap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
             ret, frame = cap.read()
             if not ret:

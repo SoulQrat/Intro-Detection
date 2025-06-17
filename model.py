@@ -17,7 +17,7 @@ class IntroDetectionModel(nn.Module):
             bidirectional=True
         )
 
-        self.fc_out = nn.Linear(hidden_size * 2, 2)
+        self.fc_out = nn.Linear(hidden_size * 2, 1)
 
     def forward(self, x):
         B, T, C, H, W = x.shape
