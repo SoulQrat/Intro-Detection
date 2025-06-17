@@ -1,14 +1,13 @@
 import os
 import cv2
 import json
-import random
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
-import matplotlib.pyplot as plt
+import numpy as np
 from collections import defaultdict
 
 transform = transforms.Compose([
@@ -26,7 +25,7 @@ def read_labels(path: str) -> pd.DataFrame:
 
 def str_to_time(s: str) -> int:
     h, m, s = map(int, s.split(':'))
-    return h * 3600 + m *60 + s
+    return h * 3600 + m * 60 + s
 
 def extract_frames_with_labels(video_folder: str, label_df):
     dataset = []
@@ -41,7 +40,7 @@ def extract_frames_with_labels(video_folder: str, label_df):
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        duration = int(total_frames / fps) if fps > 0 else 0
+        duration = int(total_frames / fps)
 
         for sec in tqdm(range(duration), total=duration):
             cap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
@@ -81,16 +80,15 @@ class VideoFramesDataset(Dataset):
         frames_tensor = torch.stack(frames)
         labels_tensor = torch.tensor(labels)
         
-        return frames_tensor, labels_tensor, fname
+        return frames_tensor, labels_tensor
 
 def collate_fn(batch):
-    max_len = max(frames.shape[0] for frames, _, _ in batch)
+    max_len = max(frames.shape[0] for frames, _ in batch)
     
     batch_frames = []
     batch_labels = []
-    batch_fnames = []
 
-    for frames, labels, fname in batch:
+    for frames, labels in batch:
         T, C, H, W = frames.shape
         pad_len = max_len - T
         
@@ -102,9 +100,8 @@ def collate_fn(batch):
         
         batch_frames.append(frames)
         batch_labels.append(labels)
-        batch_fnames.append(fname)
 
     batch_frames = torch.stack(batch_frames)
     batch_labels = torch.stack(batch_labels)
     
-    return batch_frames, batch_labels, batch_fnames
+    return batch_frames, batch_labels

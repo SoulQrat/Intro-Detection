@@ -7,16 +7,13 @@ import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 labels_path = 'labels.json'
-video_folder_path = 'video'
+video_folder_path = 'test'
 
 labels_df = read_labels('labels.json')
-print(len(labels_df))
 dataset = VideoFramesDataset(extract_frames_with_labels(f'{video_folder_path}/', labels_df))
-print(len(dataset))
 train_loader = DataLoader(dataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
-print(len(train_loader))
 
-model = IntroDetectionModel(hidden_size=16, num_layers=1)
+model = IntroDetectionModel(hidden_size=256, num_layers=2)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-train(model, train_loader, None, optimizer, device, 2)
+train(model, train_loader, val_loader=None, optimizer=optimizer, device=device, n_epochs=10)
